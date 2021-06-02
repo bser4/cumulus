@@ -212,3 +212,27 @@ test('HttpsProviderClient supports basic auth with redirects for sync', async (t
     await recursivelyDeleteS3Bucket(destinationBucket);
   }
 });
+
+test.only('HttpsProviderClient for external provider', async (t) => {
+  const httpsProviderClient = new HttpProviderClient({
+    protocol: 'https',
+    host: 'gpm1.gesdisc.eosdis.nasa.gov',
+    username: process.env.EDL_USERNAME,
+    password: process.env.EDL_PASSWORD,
+  });
+  const fileRemotePath = 'data/GPM_L3/GPM_3IMERGHH.06/2020/001/3B-HHR.MS.MRG.3IMERG.20200101-S223000-E225959.1350.V06B.HDF5';
+  const destinationBucket = randomString();
+  const destinationKey = 'syncedFile.json';
+
+  try {
+    await s3().createBucket({ Bucket: destinationBucket }).promise();
+    await httpsProviderClient.sync({
+      fileRemotePath,
+      destinationBucket,
+      destinationKey,
+    });
+    t.truthy(fileExists(destinationBucket, destinationKey));
+  } finally {
+    await recursivelyDeleteS3Bucket(destinationBucket);
+  }
+});
